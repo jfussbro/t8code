@@ -195,15 +195,6 @@ int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 int                 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
                                                 const t8_dpyramid_t *check);
 
-/** Check, if the input pyramid with shape of a tet with type 0 or 3 is inside of a tetrahedron up to level \a level
- * \param [in] p        pyramid with tet shape
- * \param [in] level    The lowest level to check
- * \param [in] anc      If not set to NULL the last ancestor in the shape of a tet is computed.
- * \return      0, if the pyramid is insed of a tetrahedron
- */
-int                 t8_dpyramid_is_inside_tet (const t8_dpyramid_t *p,
-                                               int level, t8_dpyramid_t *anc);
-
 /** Check, if a tet of type 0 or 3 has a common face with its pyramid-ancestor
  * \param [in] p      input pyramid
  * \param [in] face   A face of \a p.

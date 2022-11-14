@@ -111,6 +111,48 @@ compute_type_same_shape (const t8_dpyramid_t *p, const int level)
 }
 
 /**
+ * The i first bits give the anchor coordinate for a possible ancestor of level i
+ * for tet.
+ * We can store the last tetrahedra ancestor in anc.
+ * \param[in] tet     Inpute pyramid in the shape of a tet
+ * \param[in] level   the maximal level to check whether \a tet lies in a pyramid
+ * \param[in] anc     Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor 
+ * \return      0, if the pyramid is insed of a tetrahedron*/
+static int
+t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level,
+                           t8_dpyramid_t *anc)
+{
+  T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
+  T8_ASSERT (tet->pyramid.type == 0 || tet->pyramid.type == 3);;
+  /*the tet is initialized, the ancestor will be computed */
+  t8_dpyramid_t       pyra_at_level;    /* Candidate pyramid, where the tet could lie in. */
+  pyra_at_level.pyramid.x = 0;
+  pyra_at_level.pyramid.y = 0;
+  pyra_at_level.pyramid.z = 0;
+  for (int i = 1; i < level; i++) {
+    /*Update the coordinate of tet to i first bits */
+    const t8_dpyramid_coord_t coord_at_level =
+      (1 << (T8_DPYRAMID_MAXLEVEL - i));
+    pyra_at_level.pyramid.x =
+      pyra_at_level.pyramid.x | (tet->pyramid.x & coord_at_level);
+    pyra_at_level.pyramid.y =
+      pyra_at_level.pyramid.y | (tet->pyramid.y & coord_at_level);
+    pyra_at_level.pyramid.z =
+      pyra_at_level.pyramid.z | (tet->pyramid.z & coord_at_level);
+    pyra_at_level.pyramid.level = i;
+    if (t8_dpyramid_is_inside_pyra (tet, &pyra_at_level) == 0) {
+      /*tet is inside a tet */
+      if (anc != NULL) {
+        t8_dtet_ancestor (&(tet->pyramid), i, &(anc->pyramid));
+      }
+      return i;
+    }
+  }
+  /*No matching tet-ancestor was found, the parent is a pyramid */
+  return 0;
+}
+
+/**
  * Set the \a shift last bits of every coordinate to zero. 
  * 
  * \param[in, out]  p     Input pyramid
@@ -1523,47 +1565,6 @@ t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *tet,
     /*tet is inside tet */
     return 0;
   }
-}
-
-/**
- * The i first bits give the anchor coordinate for a possible ancestor of level i
- * for tet.
- * We can store the last tetrahedra ancestor in anc.
- * \param[in] tet     Inpute pyramid in the shape of a tet
- * \param[in] level   the maximal level to check whether \a tet lies in a pyramid
- * \param[in] anc     Can be NULL or an allocated element. If allocated, it will be filled with the data of the last tetrahedral ancestor */
-int
-t8_dpyramid_is_inside_tet (const t8_dpyramid_t *tet, const int level,
-                           t8_dpyramid_t *anc)
-{
-  T8_ASSERT (t8_dpyramid_shape (tet) == T8_ECLASS_TET);
-  T8_ASSERT (tet->pyramid.type == 0 || tet->pyramid.type == 3);;
-  /*the tet is initialized, the ancestor will be computed */
-  t8_dpyramid_t       pyra_at_level;    /* Candidate pyramid, where the tet could lie in. */
-  pyra_at_level.pyramid.x = 0;
-  pyra_at_level.pyramid.y = 0;
-  pyra_at_level.pyramid.z = 0;
-  for (int i = 1; i < level; i++) {
-    /*Update the coordinate of tet to i first bits */
-    const t8_dpyramid_coord_t coord_at_level =
-      (1 << (T8_DPYRAMID_MAXLEVEL - i));
-    pyra_at_level.pyramid.x =
-      pyra_at_level.pyramid.x | (tet->pyramid.x & coord_at_level);
-    pyra_at_level.pyramid.y =
-      pyra_at_level.pyramid.y | (tet->pyramid.y & coord_at_level);
-    pyra_at_level.pyramid.z =
-      pyra_at_level.pyramid.z | (tet->pyramid.z & coord_at_level);
-    pyra_at_level.pyramid.level = i;
-    if (t8_dpyramid_is_inside_pyra (tet, &pyra_at_level) == 0) {
-      /*tet is inside a tet */
-      if (anc != NULL) {
-        t8_dtet_ancestor (&(tet->pyramid), i, &(anc->pyramid));
-      }
-      return i;
-    }
-  }
-  /*No matching tet-ancestor was found, the parent is a pyramid */
-  return 0;
 }
 
 int
