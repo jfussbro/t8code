@@ -51,17 +51,6 @@ int                 t8_dpyramid_get_level (const t8_dpyramid_t *p);
 void                t8_dpyramid_copy (const t8_dpyramid_t *source,
                                       t8_dpyramid_t *dest);
 
-/**
- * Sets the field switch_shape_at_level for \a p. \a p has to have the shape
- * of a tetrahedron. 
- * switch_shape_at_level is set to the lowest level at which the ancestor of \a p
- * still has the shape of a tetrahedron. switch_shape_at_level is set to -1 for
- * pyramidal shaped elements.
- * 
- * \param p       Input element, whose switch_shape_at_level will be set.
- */
-void                t8_dpyramid_set_switch_shape_at_level (t8_dpyramid_t *p);
-
 /** Computes the linear position of a pyramid in an uniform grid.
  * \param [in] p          pyramid whose id will be computed.
  * \param [in] level      The level on which the linear-id should be computed.

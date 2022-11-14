@@ -163,7 +163,16 @@ t8_dpyramid_compute_switch_shape_at_level (const t8_dpyramid_t *tet)
   }
 }
 
-void
+/**
+ * Sets the field switch_shape_at_level for \a p. \a p has to have the shape
+ * of a tetrahedron. 
+ * switch_shape_at_level is set to the lowest level at which the ancestor of \a p
+ * still has the shape of a tetrahedron. switch_shape_at_level is set to -1 for
+ * pyramidal shaped elements.
+ * 
+ * \param p       Input element, whose switch_shape_at_level will be set.
+ */
+static void
 t8_dpyramid_set_switch_shape_at_level (t8_dpyramid_t *p)
 {
   if (t8_dpyramid_shape (p) == T8_ECLASS_TET) {
