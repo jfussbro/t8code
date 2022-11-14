@@ -189,12 +189,6 @@ int                 t8_dpyramid_child_id (const t8_dpyramid_t *p);
  \returns 0 if p is inside root, 1, ow*/
 int                 t8_dpyramid_is_inside_root (const t8_dpyramid_t *p);
 
-/** Check, if a given pyramid is inside another pyramid
- * \param[in] p     Pyramid to check
- * \param[in] check The outer pyramid in which \a p might lay*/
-int                 t8_dpyramid_is_inside_pyra (const t8_dpyramid_t *p,
-                                                const t8_dpyramid_t *check);
-
 /** Check, if a tet of type 0 or 3 has a common face with its pyramid-ancestor
  * \param [in] p      input pyramid
  * \param [in] face   A face of \a p.
@@ -271,12 +265,6 @@ void                t8_dpyramid_last_descendant_face (const t8_dpyramid_t *p,
 void                t8_dpyramid_compute_coords (const t8_dpyramid_t *p,
                                                 const int vertex,
                                                 int coords[]);
-
-/** Compute the pyramid-parent-type of a tetrahedron
- * \param [in] p        Input pyramid
- * \return              The type of the parent.
- */
-int                 t8_dpyramid_tetparent_type (const t8_dpyramid_t *p);
 
 /** Compute the parent of a given pyramid
  * \param [in] p        Input pyramid.
