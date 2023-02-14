@@ -3,6 +3,7 @@
 # Included from toplevel directory
 
 bin_PROGRAMS += \
+	tutorials/general/t8_practice_file \
 	tutorials/general/t8_step0_helloworld \
 	tutorials/general/t8_step1_coarsemesh \
 	tutorials/general/t8_step2_uniform_forest \
@@ -16,6 +17,8 @@ bin_PROGRAMS += \
 dist_t8data_DATA += \
   tutorials/features/t8_features_curved_meshes_generate_cmesh.geo
 
+tutorials_general_t8_practice_file_SOURCES = \
+	tutorials/general/t8_practice_file.cxx
 tutorials_general_t8_step0_helloworld_SOURCES = \
 	tutorials/general/t8_step0_helloworld.c
 tutorials_general_t8_step1_coarsemesh_SOURCES = \
