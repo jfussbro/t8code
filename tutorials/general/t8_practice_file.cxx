@@ -15,18 +15,6 @@ t8_build_pyracube_coarse_mesh (sc_MPI_Comm comm)
     return cmesh;
 }
 
-static t8_forest_t
-t8_build_uniform_forest (sc_MPI_Comm comm, t8_cmesh_t cmesh, int level)
-{
-    t8_forest_t         forest;
-    t8_scheme_cxx_t     *scheme;
-
-    scheme = t8_scheme_new_default_cxx ();
-    forest = t8_forest_new_uniform (cmesh, scheme, level, 0, comm);
-
-    return forest;
-}
-
 struct t8_adapt_data
 {
     double          midpoint[3];
@@ -95,12 +83,6 @@ t8_write_forest_vtk (t8_forest_t forest, const char *prefix_forest)
     t8_forest_write_vtk (forest, prefix_forest);
 }
 
-static void
-t8_destroy_forest (t8_forest_t forest)
-{
-    t8_forest_unref (&forest);
-}
-
 void
 t8_print_forest_information (t8_forest_t forest)
 {
@@ -126,7 +108,7 @@ main (int argc, char **argv)
     const char      *prefix_uniform = "t8_practice_file_uniform_forest";
     const char      *prefix_adapt = "t8_practice_file_adapted_forest";
     const char      *prefix_partition_balance_ghost = "t8_partitioned_balance_ghost_forest";
-    const int       level = 5;
+    const int       level = 3;
 
     mpiret = sc_MPI_Init (&argc, &argv);
     SC_CHECK_MPI (mpiret);
