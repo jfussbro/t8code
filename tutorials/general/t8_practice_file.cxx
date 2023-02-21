@@ -10,7 +10,7 @@ t8_build_pyracube_coarse_mesh (sc_MPI_Comm comm)
 {
     t8_cmesh_t cmesh;
 
-    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PYRAMID, comm, 0, 0, 0);
+    cmesh = t8_cmesh_new_hypercube (T8_ECLASS_PRISM, comm, 0, 0, 0);
         
     return cmesh;
 }
@@ -77,12 +77,6 @@ t8_partition_balance_ghost (t8_forest_t forest)
     return new_forest;
 }
 
-static void
-t8_write_forest_vtk (t8_forest_t forest, const char *prefix_forest)
-{
-    t8_forest_write_vtk (forest, prefix_forest);
-}
-
 void
 t8_print_forest_information (t8_forest_t forest)
 {
@@ -98,6 +92,88 @@ t8_print_forest_information (t8_forest_t forest)
                            global_num_elements);
 }
 
+struct t8_data_per_element
+{
+    int         level;
+    double      volume;
+};
+
+static struct t8_data_per_element *
+t8_create_element_data (t8_forest_t forest)
+{
+    t8_locidx_t     num_local_elements;
+    t8_locidx_t     num_ghost_elements;
+    struct t8_data_per_element *element_data;
+
+    T8_ASSERT (t8_forest_is_committed (forest));
+
+    num_local_elements = t8_forest_get_local_num_elements (forest);
+    num_ghost_elements = t8_forest_get_num_ghosts (forest);
+
+    element_data = T8_ALLOC (struct t8_data_per_element, num_local_elements + num_ghost_elements);
+    {
+        t8_locidx_t         itree, num_local_trees;
+        t8_locidx_t         current_index;
+        t8_locidx_t         ielement, num_elements_in_tree;
+        t8_eclass_t         tree_class;
+        t8_eclass_scheme_c  *eclass_scheme;
+        const t8_element_t  *element;
+
+        num_local_trees = t8_forest_get_num_local_trees (forest);
+        for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+            tree_class = t8_forest_get_tree_class (forest, itree);
+            eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+            num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+            for (ielement = 0; ielement < num_elements_in_tree; ++ielement, ++current_index) {
+                element = t8_forest_get_element_in_tree (forest, itree, ielement);
+                element_data[current_index].level = eclass_scheme->t8_element_level (element);
+                element_data[current_index].volume = t8_forest_element_volume (forest, itree, element);
+            }
+        }
+    }
+    return element_data;
+}
+
+static void t8_exchange_ghost_data (t8_forest_t forest, struct t8_data_per_element *data)
+{
+    sc_array            *sc_array_wrapper;
+    t8_locidx_t         num_elements = t8_forest_get_local_num_elements (forest);
+    t8_locidx_t         num_ghosts = t8_forest_get_num_ghosts (forest);
+
+    sc_array_wrapper = sc_array_new_data (data, sizeof (struct t8_data_per_element), num_elements + num_ghosts);
+
+    t8_forest_ghost_exchange_data (forest, sc_array_wrapper);
+
+    sc_array_destroy (sc_array_wrapper);
+}
+
+static void t8_output_data_to_vtu (t8_forest_t forest, struct t8_data_per_element *data, const char *prefix)
+{
+    t8_locidx_t         num_elements = t8_forest_get_local_num_elements (forest);
+    t8_locidx_t         ielem;
+    double              *element_volumes = T8_ALLOC (double, num_elements);
+    int                 num_data = 1;
+    t8_vtk_data_field_t vtk_data;
+    vtk_data.type = T8_VTK_SCALAR;
+    strcpy (vtk_data.description, "Element volume");
+    vtk_data.data = element_volumes;
+    
+    for (ielem = 0; ielem < num_elements; ++ielem) {
+        element_volumes[ielem] = data[ielem].volume;
+    }
+    {
+        int             write_treeid = 1;
+        int             write_mpirank = 1;
+        int             write_level = 1;
+        int             write_element_id = 1;
+        int             write_ghosts = 0;
+        t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank,
+                                 write_level, write_element_id, write_ghosts,
+                                 0, 0, num_data, &vtk_data);
+    }
+    T8_FREE (element_volumes);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -105,10 +181,10 @@ main (int argc, char **argv)
     sc_MPI_Comm     comm;
     t8_cmesh_t      cmesh;
     t8_forest_t     forest;
-    const char      *prefix_uniform = "t8_practice_file_uniform_forest";
-    const char      *prefix_adapt = "t8_practice_file_adapted_forest";
-    const char      *prefix_partition_balance_ghost = "t8_partitioned_balance_ghost_forest";
+    const char      *prefix_forest= "t8_practice_file_forest";
+    const char      *prefix_forest_with_data = "t8_practice_file_forest_with_data";
     const int       level = 3;
+    t8_data_per_element *data;
 
     mpiret = sc_MPI_Init (&argc, &argv);
     SC_CHECK_MPI (mpiret);
@@ -124,22 +200,37 @@ main (int argc, char **argv)
     t8_global_productionf ("Created uniform forest out of cmesh.\n");
     t8_global_productionf ("Refinement level:\t\t\t%i\n", level);
     t8_print_forest_information (forest);
-    t8_forest_write_vtk (forest, prefix_uniform);
-    t8_global_productionf ("Wrote uniform forest to vtu files:\t%s*\n",
-                           prefix_uniform);
 
     forest = t8_adapt_forest (forest);
     t8_global_productionf ("Adapted forest.\n");
     t8_print_forest_information (forest);
-    t8_write_forest_vtk (forest, prefix_adapt);
-    t8_global_productionf ("Wrote adapted forest to vtu files:\t%s*\n",
-                           prefix_adapt);
 
     t8_global_productionf ("Repartitioning and balancing this forest and creating a ghost layer.\n");
     forest = t8_partition_balance_ghost (forest);
     t8_global_productionf ("Repartitioned and balanced forest and build ghost layer.\n");
     t8_print_forest_information(forest);
-    t8_forest_write_vtk (forest, prefix_partition_balance_ghost);
+    t8_forest_write_vtk (forest, prefix_forest);
+    t8_global_productionf ("Wrote adapted, pardtitioned and balanced forest with ghost elements to vtu files: %s*\n", prefix_forest);
+
+    data = t8_create_element_data (forest);
+
+    t8_global_productionf ("Computed level and volume data for local elements.\n");
+    if (t8_forest_get_local_num_elements (forest) > 0) {
+        t8_global_productionf ("Element 0 has level %i and volume %e. \n", data[0].level, data[0].volume);
+    }
+
+    t8_exchange_ghost_data (forest, data);
+    t8_global_productionf ("Exchanged ghost data.\n");
+
+    if (t8_forest_get_num_ghosts (forest) > 0) {
+        t8_locidx_t         first_ghost_index = t8_forest_get_local_num_elements (forest);
+        t8_global_productionf ("Ghost 0 has level %i and volume %e.\n,", data[first_ghost_index].level, data[first_ghost_index].volume);
+    }
+
+    t8_output_data_to_vtu (forest, data, prefix_forest_with_data);
+    t8_global_productionf ("Wrote forest and volume data to %s*.\n", prefix_forest_with_data);
+
+    T8_FREE (data);
 
     t8_forest_unref (&forest);
     t8_global_productionf ("Destroyed forest.\n");
