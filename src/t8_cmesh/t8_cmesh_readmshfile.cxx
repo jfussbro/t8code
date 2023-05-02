@@ -981,9 +981,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
           T8_ASSERT (t8_geom_is_occ(occ_geometry_base));
           const t8_geometry_occ_c *occ_geometry = dynamic_cast<const t8_geometry_occ_c *> (occ_geometry_base);
           /* Check for right element class */
-          if (eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_QUAD)
+          if (eclass != T8_ECLASS_HEX && eclass != T8_ECLASS_QUAD && eclass != T8_ECLASS_TRIANGLE)
           {
-            t8_errorf("%s element detected. The occ geometry currently only supports quad and hex elements.", 
+            t8_errorf("%s element detected. The occ geometry currently only supports quad, triangle and hex elements.", 
                       t8_eclass_to_string[eclass]);
             goto die_ele;
           }

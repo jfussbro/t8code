@@ -124,6 +124,10 @@ t8_geometry_occ::t8_geom_evaluate (t8_cmesh_t cmesh,
     t8_geometry_occ::t8_geom_evaluate_occ_hex (cmesh, gtreeid, ref_coords,
                                                out_coords);
     break;
+  case T8_ECLASS_TRIANGLE:
+    t8_geometry_occ::t8_geom_evaluate_occ_triangle (cmesh, gtreeid, ref_coords,
+                                                    out_coords);
+    break;
   default:
     SC_ABORTF ("Error: Curved %s geometry not yet implemented. \n",
                t8_eclass_to_string[active_tree_class]);
@@ -550,6 +554,17 @@ t8_geometry_occ::t8_geom_evaluate_occ_hex (t8_cmesh_t cmesh,
 }
 
 void
+t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
+                                                t8_gloidx_t gtreeid,
+                                                const double *ref_coords,
+                                                double out_coords[3]) const
+{
+  t8_geom_compute_linear_geometry (active_tree_class,
+                                   active_tree_vertices, ref_coords,
+                                   out_coords);
+}
+
+void
 t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
                                             t8_gloidx_t gtreeid,
                                             const double *ref_coords,
@@ -586,7 +601,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
                                   face_parameters,
                                   2, 2, interpolated_surface_parameters);
 
-    /* Iterate over each edge to seach for parameter displacements */
+    /* Iterate over each edge to search for parameter displacements */
     for (int i_edge = 0; i_edge < num_edges; ++i_edge) {
       if (edges[i_edge] > 0) {
         /* The edges of a quad point in direction of ref_coord (1 - i_edge / 2).
@@ -766,7 +781,7 @@ t8_geometry_occ::t8_geom_evaluate_occ_quad (t8_cmesh_t cmesh,
           surface->D0 (interpolated_surface_parameters[0],
                        interpolated_surface_parameters[1], pnt);
         }
-        /* Calculate displacement between points on curve and pint on linear curve.
+        /* Calculate displacement between points on curve and point on linear curve.
          * Then scale it and add the scaled displacement to the result. */
         for (int dim = 0; dim < 3; ++dim) {
           const double        displacement = pnt.Coord (dim + 1)
