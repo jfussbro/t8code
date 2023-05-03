@@ -559,9 +559,127 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
                                                 const double *ref_coords,
                                                 double out_coords[3]) const
 {
+  T8_ASSERT (active_tree_class == T8_ECLASS_TRIANGLE);
+
+  const int num_edges = t8_eclass_num_edges[active_tree_class];
+
+  for (int i_edge = 0; i_edge < num_edges; i_edge++) {
+    double  opposite_vertex[2];
+    double slope;
+    /* Determine the opposite vertex of the current edge in the unit triangle
+     * and calculate the slope of the line trough the opposite vertex
+     * and the reference point.
+     *
+     * slope = (y2-y1)/(x2-x1) */
+    switch (i_edge)
+    {
+    case 0:
+      opposite_vertex[0] = 0;
+      opposite_vertex[1] = 0;
+
+      if (opposite_vertex[0] == ref_coords[0]) {
+        slope = 0;
+      }
+      else {
+        slope = (opposite_vertex[1] - ref_coords[1])
+                / (opposite_vertex[0] - ref_coords[0]);
+      }
+      break;
+    case 1:
+      opposite_vertex[0] = 1;
+      opposite_vertex[1] = 0;
+
+      if (ref_coords[0] == opposite_vertex[0]) {
+        slope = 0;
+      }
+      else {
+        slope = (ref_coords[1] - opposite_vertex[1])
+                / (ref_coords[0] - opposite_vertex[0]);
+      }
+      break;
+    case 2:
+      opposite_vertex[0] = 1;
+      opposite_vertex[1] = 1;
+
+      if (ref_coords[0] == opposite_vertex[0]) {
+        slope = 0;
+      }
+      else {
+        slope = (ref_coords[1] - opposite_vertex[1])
+                / (ref_coords[0] - opposite_vertex[0]);
+      }
+      break;
+    default: 
+      SC_ABORTF("Error: Current element is not a triangle.");
+      break;
+    }
+
+    /* Calculate the projection of the opposite vertex, through the reference point, onto the current edge. */
+    double intersection[2];
+    double  c2;
+    switch (i_edge)
+    {
+    case 0:
+      intersection[0] = 1;
+      intersection[1] = slope * 1;
+      break;
+    case 1:
+      if (ref_coords[0] == opposite_vertex[0]) {
+        intersection[0] = 1;
+        intersection[1] = 1;
+        break;
+      }
+      else if (ref_coords[1] == opposite_vertex[1]) {
+        intersection[0] = 0;
+        intersection[1] = 0;
+        break;
+      }
+      else {
+        /* c2 = ((x2*y1)-(x1*y2)) / (x2-x1) */
+        c2 = ((ref_coords[0]*opposite_vertex[1])-(opposite_vertex[0]*ref_coords[1]))
+                  / (ref_coords[0] - opposite_vertex[0]);
+      }
+      /* intersectionX = (c2-c1)/(m1-m2)
+       * intersectionY = (m1*c1 - c2*m2)/(m1-m2)
+       *
+       * c1 is the y axis intercept of the hypotenuse
+       * m1 is the slope of the hypotenuse
+       */
+      intersection[0] = (c2 - 0) / (1 - slope);
+      intersection[1] = ((1*0) - (c2*slope)) / (1 - slope);
+      break;
+    case 2:
+      if (ref_coords[0] == opposite_vertex[0] || ref_coords[1] == opposite_vertex[1]) {
+        intersection[0] = 1;
+        intersection[1] = 0;
+        break;
+      }
+      else {
+        /* c2 = ((x2*y1)-(x1*y2)) / (x2-x1) */
+        c2 = ((ref_coords[0]*opposite_vertex[1])-(opposite_vertex[0]*ref_coords[1]))
+                  / (ref_coords[0] - opposite_vertex[0]);
+      }
+      /* intersectionX = (c2-c1)/(m1-m2)
+       * intersectionY = 0
+       *
+       * c1 is the y axis intercept of edge 2
+       * m1 is the slope of edge 2
+       */
+      intersection[0] = (c2 - 0) / (0 - slope);
+      intersection[1] = 0;
+      break;
+    default:
+      SC_ABORTF("Error: Current element is not a triangle.");
+      break;
+    }
+    //t8_global_productionf("ref_coords = (%f, %f). Projection onto edge%i at (%f, %f)\n", ref_coords[0], ref_coords[1], i_edge, intersection[0], intersection[1]);
+  }
+
+  /*
   t8_geom_compute_linear_geometry (active_tree_class,
                                    active_tree_vertices, ref_coords,
                                    out_coords);
+  */
 }
 
 void

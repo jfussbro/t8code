@@ -976,7 +976,7 @@ t8_analytic_geom (int level, t8_example_geom_type geom_type)
         BRepAlgoAPI_Fuse (shape,
                           BRepBuilderAPI_MakeEdge (occ_curve2).Edge ());
 
-      BRepTools::Write (shape, "shape_occ_triangle.brep", Message_ProgressRange());
+      BRepTools::Write (shape, "shape_occ_triangle.brep", 0, 0, TopTools_FormatVersion_VERSION_1);
 
       /* Create an occ geometry. */
       t8_geometry_occ    *geometry_occ =
