@@ -568,6 +568,8 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
   /* Linear mapping from ref_coords to out_coords */
   t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices, ref_coords, out_coords);
+
+  /* For each line linked to an edge determine the out_coords scaling */
   for (int i_edge = 0; i_edge < num_edges; i_edge++) {
     if (edges[i_edge] > 0) {
       double  ref_opposite_vertex[2];
@@ -621,7 +623,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
         break;
       }
 
-      /* Calculate the projection of the opposite vertex, through the reference point, onto the current edge in reference space. */
+      /* Calculate the projection of the opposite vertex, through the reference point,
+       * onto the current edge in reference space.
+       */
       double ref_intersection[2];
       double  ref_c2;
       switch (i_edge)
@@ -682,9 +686,10 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
       /* Converting ref_intersection to global_intersection */
       double  glob_intersection[3];
-
       t8_geom_compute_linear_geometry(active_tree_class, active_tree_vertices,
                                       ref_intersection, glob_intersection);
+
+      t8_global_productionf("current edge: %d\nref_intersection: [%f, %f]\nglob_intersection: [%f, %f, %f]\n", i_edge, ref_intersection[0], ref_intersection[1], glob_intersection[0], glob_intersection[1], glob_intersection[2]);
 
       /* Determine the scaling factor by calculating the distances from the opposite vertex to the glob_intersection and to the reference point*/
       double dist_x_intersection, dist_y_intersection, dist_x_ref, dist_y_ref, scaling_factor;
@@ -762,9 +767,9 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
       for (int dim = 0; dim < 3; ++dim) {
         double displacement = pnt.Coord (dim + 1) - glob_intersection[dim];
         double scaled_displacement = displacement * scaling_factor;
-        t8_global_productionf("out_coords[%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
+        //t8_global_productionf("out_coords[%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
         out_coords[dim] += scaled_displacement;
-        t8_global_productionf("out_coords_scaled[%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
+        //t8_global_productionf("out_coords_scaled[%f, %f, %f]\n", out_coords[0], out_coords[1], out_coords[2]);
       }
       //t8_global_productionf("Current edge: %d\nout_coords[%f, %f, %f]\n", i_edge, out_coords[0], out_coords[1], out_coords[2]);
     }
