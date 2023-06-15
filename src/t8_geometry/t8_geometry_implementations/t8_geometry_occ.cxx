@@ -203,18 +203,20 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
   double  interpolated_surface_parameters[2];
 
   /*
-   *
-   *              2
-   *             / \
-   *            /   \
-   *           /     \
-   *          /       \
-   *         E1        E0
-   *        /           \
-   *       /             \
-   *      /               \     y
-   *     /                 \    |
-   *    0---------E2--------1   x--x
+   * Reference Space    |      Global Space
+   *      [0,1]^2       |         [x,y]^2
+   *                    |
+   *              2     |            2
+   *            / |     |           / \
+   *           /  |     |          /    \
+   *          /   |     |         /       \              o ref_coords in reference space
+   *         /    |     |        /          \            @ glob_ref_coords in global space
+   *        E1     E0   |       E1           E0
+   *       /      |     |      /                \
+   *      /       o     |     /                  @
+   *     /        |     |    /                   |   y
+   *    /         |     |   /                   /    |
+   *   0----E2----1     |  0---------E2--------1     x--x
    * 
    */
 
@@ -283,12 +285,44 @@ t8_geometry_occ::t8_geom_evaluate_occ_triangle (t8_cmesh_t cmesh,
 
         /* Convert edge parameter to surface parameters */
         double              converted_edge_surface_parameters[2];
+        surface =
+          BRep_Tool::Surface (TopoDS::Face (occ_shape_face_map.FindKey (*faces)));
+        double parametric_bounds[4];
+              surface->Bounds(parametric_bounds[0], parametric_bounds[1], parametric_bounds[2], parametric_bounds[3]);
+
         t8_geometry_occ::t8_geom_edge_parameter_to_face_parameters (edges
                                                                     [i_edge],
                                                                     *faces,
                                                                     interpolated_curve_parameter,
                                                                     converted_edge_surface_parameters);
-        
+        /* Check for right conversion of edge to surface parameter and correct if needed */
+        /* Checking u parameter */
+        for (int i_face_node = 0; i_face_node < 3; ++i_face_node) {
+          if (face_parameters[i_face_node * 2] == parametric_bounds[0]) {
+            if (converted_edge_surface_parameters[0] == parametric_bounds[1]) {
+              converted_edge_surface_parameters[0] = parametric_bounds[0];
+            }
+          }
+          else if (face_parameters[i_face_node * 2] == parametric_bounds[1]) {
+            if (converted_edge_surface_parameters[0] == parametric_bounds[0]) {
+              converted_edge_surface_parameters[0] = parametric_bounds[1];
+            }
+          }
+        }
+        /* Checking v parameter */
+        for (int i_face_node = 0; i_face_node < 3; ++i_face_node) {
+          if (face_parameters[i_face_node * 2 + 1] == parametric_bounds[0]) {
+            if (converted_edge_surface_parameters[1] == parametric_bounds[1]) {
+              converted_edge_surface_parameters[1] = parametric_bounds[0];
+            }
+          }
+          else if (face_parameters[i_face_node * 2 + 1] == parametric_bounds[1]) {
+            if (converted_edge_surface_parameters[1] == parametric_bounds[0]) {
+              converted_edge_surface_parameters[1] = parametric_bounds[1];
+            }
+          }
+        }    
+
         /* Interpolate between the surface parameters of the current edge */
         double              edge_surface_parameters[4],
           interpolated_edge_surface_parameters[2];
