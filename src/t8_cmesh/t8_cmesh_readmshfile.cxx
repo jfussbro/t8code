@@ -1184,8 +1184,9 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                     if (occ_geometry->t8_geom_is_edge_on_face(face_nodes[i_face_nodes].entity_tag, surface_index))
                     {
                       occ_geometry->t8_geom_edge_parameter_to_face_parameters(face_nodes[i_face_nodes].entity_tag,
-                                                                              surface_index,
+                                                                              surface_index, num_face_nodes,
                                                                               face_nodes[i_face_nodes].parameters[0],
+                                                                              NULL,
                                                                               face_nodes[i_face_nodes].parameters);
                       face_nodes[i_face_nodes].entity_dim = 2;
                     }
@@ -1231,7 +1232,7 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                 parameters[i_face_nodes * 2] = face_nodes[i_face_nodes].parameters[0];
                 parameters[i_face_nodes * 2 + 1] = face_nodes[i_face_nodes].parameters[1];
               }
-              
+
               if (occ_surface->IsUClosed()) {
                 for (int i_face_nodes = 0; 
                      i_face_nodes < num_face_nodes; 
@@ -1241,7 +1242,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                     for (int j_face_nodes = 0; 
                          j_face_nodes < num_face_nodes; 
                          ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2] != parametric_bounds[0]) {
+                      if (parameters[j_face_nodes * 2] != parametric_bounds[0]
+                          && parameters[j_face_nodes * 2] != parametric_bounds[1]) {
                         if (parameters[j_face_nodes * 2] > ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
                           parameters[i_face_nodes * 2] = parametric_bounds[1];
                           break;
@@ -1253,7 +1255,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                     for (int j_face_nodes = 0; 
                          j_face_nodes < num_face_nodes; 
                          ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2] != parametric_bounds[1]) {
+                      if (parameters[j_face_nodes * 2] != parametric_bounds[1]
+                          && parameters[j_face_nodes * 2] != parametric_bounds[0]) {
                         if (parameters[j_face_nodes * 2] < ((parametric_bounds[1] - parametric_bounds[0]) / 2)) {
                           parameters[i_face_nodes * 2] = parametric_bounds[0];
                           break;
@@ -1263,7 +1266,6 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   }
                 }
               }
-
               if (occ_surface->IsVClosed()) {
                 for (int i_face_nodes = 0; 
                      i_face_nodes < num_face_nodes; 
@@ -1273,7 +1275,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                     for (int j_face_nodes = 0; 
                          j_face_nodes < num_face_nodes; 
                          ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2 + 1] != parametric_bounds[2]) {
+                      if (parameters[j_face_nodes * 2 + 1] != parametric_bounds[2]
+                          && parameters[j_face_nodes * 2 + 1] != parametric_bounds[3]) {
                         if (parameters[j_face_nodes * 2 + 1] > ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
                           parameters[i_face_nodes * 2 + 1] = parametric_bounds[3];
                           break;
@@ -1285,7 +1288,8 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                     for (int j_face_nodes = 0; 
                          j_face_nodes < num_face_nodes; 
                          ++j_face_nodes) {
-                      if (parameters[j_face_nodes * 2 + 1] != parametric_bounds[3]) {
+                      if (parameters[j_face_nodes * 2 + 1] != parametric_bounds[3]
+                          && parameters[j_face_nodes * 2 + 1] != parametric_bounds[2]) {
                         if (parameters[j_face_nodes * 2 + 1] < ((parametric_bounds[3] - parametric_bounds[2]) / 2)) {
                           parameters[i_face_nodes * 2 + 1] = parametric_bounds[2];
                           break;
@@ -1532,11 +1536,14 @@ t8_cmesh_msh_file_4_read_eles (t8_cmesh_t cmesh, FILE *fp,
                   edge_nodes[i_edge_node].entity_dim = 2;
                 }
                 /* If the node lies on an edge we have to do the same */
+                
                 if (edge_nodes[i_edge_node].entity_dim == 1)
                 {
+                  const int num_face_nodes = t8_eclass_num_vertices[eclass];
                   occ_geometry->t8_geom_edge_parameter_to_face_parameters(edge_nodes[i_edge_node].entity_tag,
-                                                                          edge_geometry_tag,
+                                                                          edge_geometry_tag, num_face_nodes,
                                                                           edge_nodes[i_edge_node].parameters[0],
+                                                                          parameters,
                                                                           edge_nodes[i_edge_node].parameters);
                   t8_global_productionf("test");
                   edge_nodes[i_edge_node].entity_dim = 2;
