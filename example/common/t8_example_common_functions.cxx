@@ -397,4 +397,37 @@ t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double
   x_out[2] = 0;
 }
 
+void
+t8_flow_around_joukowsky_airfoil (const double x[3], double t, double x_out[])
+{
+  /* Allocate some variables for the calculation of the velocity in the complex plane */
+  const double my_x = -0.08;
+  const double my_y = 0.08;
+  double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y));
+  const double velocity = 1;
+  const int angle_of_attack = 0;
+  double circulation = 4 * M_PI * velocity * radius * sin (angle_of_attack + asin (my_y / radius));
+
+  /* transform center coordinate of element x to coordinate on the complex plane */
+  double chi = x[0] / (1 + (1 / ((x[0] * x[0]) + (x[1] * x[1]))));
+  double eta = x[1] / (1 - (1 / ((x[0] * x[0]) + (x[1] * x[1]))));
+
+  /* Calculate the complex velocity w_coplex around the circle in the complex plane divided in a real and a imaginary part. */
+  double w_complex_re = velocity + exp (-angle_of_attack)
+                        + ((2 * M_PI * (chi - my_x) * circulation) / ((chi - my_x) * (chi - my_x)))
+                        - ((velocity * radius * radius * exp (angle_of_attack)) / ((chi - my_x) * (chi - my_x)));
+  double w_complex_im = velocity + exp (-angle_of_attack)
+                        + ((2 * M_PI * (eta - my_y) * circulation) / ((eta - my_y) * (eta - my_y)))
+                        - ((velocity * radius * radius * exp (angle_of_attack)) / ((eta - my_y) * (eta - my_y)));
+
+  /* Transform complex conjugate velocity w_conj into complex velocity w in the z-plane */
+  double w_x = w_complex_re / (1 - (1 / (chi * chi)));
+  double w_y = w_complex_im / (1 - (1 / (eta * eta)));
+
+  /* Save the complex velocity w as the flow vector around the joukowski airfoil */
+  x_out[0] = w_x;
+  x_out[1] = w_y;
+  x_out[2] = 0;
+}
+
 T8_EXTERN_C_END ();

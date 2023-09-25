@@ -871,6 +871,8 @@ t8_advect_choose_flow (int flow_arg)
     return t8_flow_stokes_flow_sphere_shell;
   case 7:
     return t8_flow_around_circle_with_angular_velocity;
+  case 8:
+    return t8_flow_around_joukowsky_airfoil;
   default:
     SC_ABORT ("Wrong argument for flow parameter.\n");
   }
@@ -1509,7 +1511,12 @@ main (int argc, char *argv[])
                       " mesh, which can be generated with Gmsh and the .geo"
                       " files 't8_advection_generate_channel.geo' and"
                       " 't8_advection_generate_channel_2d.geo'. These meshes"
-                      " can also be used with the curved geometry.\n");
+                      " can also be used with the curved geometry.\n"
+                      "\t\t8 - Flow past a joukowsky airfoil. This flow is defined for a specific"
+                      " mesh, which can be generated with Gmesh and the .geo files"
+                      " 't8_advection_generate_joukowsky_airfoil_2d.geo' and"
+                      " 't8_advection_generate_joukowsky_airfoil_3d'. These files can also be used"
+                      " with the curved geometry.\n");
   sc_options_add_int (opt, 'l', "level", &level, 0, "The minimum refinement level of the mesh.");
   sc_options_add_int (opt, 'r', "rlevel", &reflevel, 0, "The number of adaptive refinement levels.");
   sc_options_add_int (opt, 'e', "elements", &cube_type, -1,
@@ -1579,7 +1586,7 @@ main (int argc, char *argv[])
     t8_global_essentialf ("%s\n", help);
     sc_options_print_usage (t8_get_package_id (), SC_LP_ERROR, opt, NULL);
   }
-  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 7 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
+  else if (parsed >= 0 && 1 <= flow_arg && flow_arg <= 8 && 0 <= level && 0 <= reflevel && 0 <= vtk_freq
            && ((mshfile != NULL && 0 < dim && dim <= 3) || (1 <= cube_type && cube_type <= 8)) && band_width >= 0) {
     t8_cmesh_t cmesh;
     t8_flow_function_3d_fn u;
