@@ -194,7 +194,7 @@ main (int argc, char **argv)
   if (parsed >= 0 && meshfile != NULL) {
     t8_global_productionf ("meshfile = %s\n", meshfile);
 
-    const int dim = 3;
+    const int dim = 2;
     const int main_proc = 0;
     const int partition = 0;
     const int use_occ_geometry = 0;

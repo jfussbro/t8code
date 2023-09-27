@@ -25,6 +25,7 @@
 
 #include <example/common/t8_example_common.h>
 #include <t8_vec.h>
+#include <complex>
 
 T8_EXTERN_C_BEGIN ();
 
@@ -400,33 +401,35 @@ t8_flow_around_circle_with_angular_velocity (const double x[3], double t, double
 void
 t8_flow_around_joukowsky_airfoil (const double x[3], double t, double x_out[])
 {
+  std::complex<double> i (0.0, 1.0);
   /* Allocate some variables for the calculation of the velocity in the complex plane */
+
+  /* The values for my depend on the airfoil generated via the joukowsky transform */
   const double my_x = -0.08;
   const double my_y = 0.08;
+  std::complex<double> my (my_x, my_y);
+
   double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y));
-  const double velocity = 1;
-  const int angle_of_attack = 0;
-  double circulation = 4 * M_PI * velocity * radius * sin (angle_of_attack + asin (my_y / radius));
+  const double velocity = 0.5;
+  const double angle_of_attack = 0;
+  const double circulation = 4 * M_PI * velocity * radius * sin (angle_of_attack + asin (my_y / radius));
 
-  /* transform center coordinate of element x to coordinate on the complex plane */
-  double chi = x[0] / (1 + (1 / ((x[0] * x[0]) + (x[1] * x[1]))));
-  double eta = x[1] / (1 - (1 / ((x[0] * x[0]) + (x[1] * x[1]))));
+  /* transform the coordinate on the z-plane to coordinate on the complex plane */
+  std::complex<double> z (x[0], x[1]);
+  std::complex<double> zeta = z + (z / ((std::real (z) * std::real (z)) + (std::imag (z) * std::imag (z))));
 
-  /* Calculate the complex velocity w_coplex around the circle in the complex plane divided in a real and a imaginary part. */
-  double w_complex_re = velocity + exp (-angle_of_attack)
-                        + ((2 * M_PI * (chi - my_x) * circulation) / ((chi - my_x) * (chi - my_x)))
-                        - ((velocity * radius * radius * exp (angle_of_attack)) / ((chi - my_x) * (chi - my_x)));
-  double w_complex_im = velocity + exp (-angle_of_attack)
-                        + ((2 * M_PI * (eta - my_y) * circulation) / ((eta - my_y) * (eta - my_y)))
-                        - ((velocity * radius * radius * exp (angle_of_attack)) / ((eta - my_y) * (eta - my_y)));
+  /* Calculate the velocity W_zetta around the circle in the complex plane */
+  std::complex<double> W_zeta = (velocity * std::exp (std::complex<double> (0, -1 * angle_of_attack)))
+                                + (std::complex<double> (0, circulation) / (2 * M_PI * (zeta - my)))
+                                - ((velocity * radius * radius * std::exp (std::complex<double> (0, angle_of_attack)))
+                                   / ((zeta - my) * (zeta - my)));
 
-  /* Transform complex conjugate velocity w_conj into complex velocity w in the z-plane */
-  double w_x = w_complex_re / (1 - (1 / (chi * chi)));
-  double w_y = w_complex_im / (1 - (1 / (eta * eta)));
+  /* Transform velocity W_zetta into the velocity W in the z-plane */
+  std::complex<double> W = (W_zeta / (1.0 - (1.0 / (zeta * zeta))));
 
   /* Save the complex velocity w as the flow vector around the joukowski airfoil */
-  x_out[0] = w_x;
-  x_out[1] = w_y;
+  x_out[0] = std::real (W);
+  x_out[1] = std::imag (W);
   x_out[2] = 0;
 }
 

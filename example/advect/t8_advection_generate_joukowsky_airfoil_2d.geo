@@ -35,7 +35,7 @@
  lc = 1;
  center_chi = -0.08;
  center_eta = 0.08;
- radius = sqrt(((1 - center_chi) * (1 - center_chi)) + center_eta);
+ radius = Sqrt(((1 - center_chi) * (1 - center_chi)) + center_eta);
  delta_angle = (2 * Pi) / 100;
  
  Macro XYCoords
@@ -63,8 +63,8 @@
  Spline(100) = {1000:1099, 1000};
  
  /* Definition of the corner points of the flow domain. */
- Point(2040) = {-2.5, -2, 0, 1.0};
- Point(2041) = {-2.5, 2, 0, 1.0};
+ Point(2040) = {-4, -2, 0, 1.0};
+ Point(2041) = {-4, 2, 0, 1.0};
  Point(2042) = {4, 2, 0, 1.0};
  Point(2043) = {4, -2, 0, 1.0};
  
