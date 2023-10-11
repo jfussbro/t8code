@@ -35,7 +35,7 @@
  lc = 1;
  center_chi = -0.08;
  center_eta = 0.08;
- radius = Sqrt(((1 - center_chi) * (1 - center_chi)) + center_eta);
+ radius = Sqrt(((1 - center_chi) * (1 - center_chi)) + (center_eta * center_eta));
  delta_angle = (2 * Pi) / 100;
  
  Macro XYCoords
@@ -58,9 +58,9 @@
    angle = angle + delta_angle;
  EndFor
  
- /* Build a spline fit for the points. Starting and ending with the 
-  * trailing edge. */
- Spline(100) = {1000:1099, 1000};
+ /* Build two spline fits for the points. One for the dorsal and one for the ventral side. */
+ Spline(100) = {1000:1050};
+ Spline(200) = {1050:1100};
  
  /* Definition of the corner points of the flow domain. */
  Point(2040) = {-4, -2, 0, 1.0};
@@ -76,13 +76,13 @@
  
  /* Close lines to loop */
  Curve Loop(1) = {101, 102, 103, 104};
- Curve Loop(2) = {100};
+ Curve Loop(2) = {100, 200};
  
  /* Make surface with profile cutout */
  Plane Surface(1) = {1, 2};
  /* And extrude the surface to get a volume. */
- Extrude {0, 0, 0.5} {
-   Surface{1}; 
+ Extrude {0, 0, 1} {
+   Surface {1};
  }
  /* Due to the indexing behavior if Gmsh, we have to save the .brep file
   * and reopen it again. */
@@ -108,9 +108,9 @@
   *
   * For other Gmsh versions check the Gmsh website: 
   * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
- 
  /* Now we can create the three-dimensional mesh. */
  Mesh 3;
+ Coherence Mesh;
  
  /* Lastly, we can save the mesh. Note, that we are using msh version 4.X
   * and the parametric option. */

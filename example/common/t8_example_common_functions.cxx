@@ -409,28 +409,35 @@ t8_flow_around_joukowsky_airfoil (const double x[3], double t, double x_out[])
   const double my_y = 0.08;
   std::complex<double> my (my_x, my_y);
 
-  double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y));
-  const double velocity = 0.5;
+  double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y)) - 0.1;
+  const double velocity = 5;
   const double angle_of_attack = 0;
   const double circulation = 4 * M_PI * velocity * radius * sin (angle_of_attack + asin (my_y / radius));
 
   /* transform the coordinate on the z-plane to coordinate on the complex plane */
-  std::complex<double> z (x[0], x[1]);
-  std::complex<double> zeta = z + (z / ((std::real (z) * std::real (z)) + (std::imag (z) * std::imag (z))));
+  std::complex<double> z = x[0] + i * x[1];
+  std::complex<double> zeta_1 = (z / 2.0) + sqrt (((z * z) / 4.0) - (radius * radius));
+  std::complex<double> zeta_2 = (z / 2.0) - sqrt (((z * z) / 4.0) - (radius * radius));
+  std::complex<double> zeta;
+  if (std::abs (zeta_1) >= radius) {
+    zeta = zeta_1;
+  }
+  else {
+    zeta = zeta_2;
+  }
 
-  /* Calculate the velocity W_zetta around the circle in the complex plane */
-  std::complex<double> W_zeta = (velocity * std::exp (std::complex<double> (0, -1 * angle_of_attack)))
-                                + (std::complex<double> (0, circulation) / (2 * M_PI * (zeta - my)))
-                                - ((velocity * radius * radius * std::exp (std::complex<double> (0, angle_of_attack)))
-                                   / ((zeta - my) * (zeta - my)));
+  /* Calculate the velocity W_zeta around the circle in the complex plane */
+  std::complex<double> W_zeta
+    = (velocity * std::exp (-1.0 * i * angle_of_attack)) + ((i * circulation) / (2.0 * M_PI * (zeta - my)))
+      - ((velocity * radius * radius * std::exp (i * angle_of_attack)) / ((zeta - my) * (zeta - my)));
 
-  /* Transform velocity W_zetta into the velocity W in the z-plane */
-  std::complex<double> W = (W_zeta / (1.0 - (1.0 / (zeta * zeta))));
+  /* Transform velocity W_zeta into the velocity W in the z-plane */
+  std::complex<double> zeta_prime = 1.0 - ((radius * radius) / (zeta * zeta));
+  std::complex<double> W = (W_zeta / zeta_prime);
 
   /* Save the complex velocity w as the flow vector around the joukowski airfoil */
   x_out[0] = std::real (W);
-  x_out[1] = std::imag (W);
+  x_out[1] = -std::imag (W);
   x_out[2] = 0;
 }
-
 T8_EXTERN_C_END ();
