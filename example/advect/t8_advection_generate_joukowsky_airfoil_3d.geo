@@ -54,7 +54,7 @@
  angle =  0;
  For i In {0 : 100}
    Call XYCoords;
-   Point(1000 + i) = {x, y, 0, lc};
+   Point(1000 + i) = {1.1*x, 1.1*y, 0, lc};
    angle = angle + delta_angle;
  EndFor
  
@@ -109,6 +109,8 @@
   * For other Gmsh versions check the Gmsh website: 
   * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
  /* Now we can create the three-dimensional mesh. */
+ Mesh.MeshSizeMax = 1;
+ Mesh.MeshSizeFromCurvature = 0;
  Mesh 3;
  Coherence Mesh;
  

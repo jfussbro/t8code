@@ -409,7 +409,7 @@ t8_flow_around_joukowsky_airfoil (const double x[3], double t, double x_out[])
   const double my_y = 0.08;
   std::complex<double> my (my_x, my_y);
 
-  double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y)) - 0.1;
+  double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y));
   const double velocity = 5;
   const double angle_of_attack = 0;
   const double circulation = 4 * M_PI * velocity * radius * sin (angle_of_attack + asin (my_y / radius));
