@@ -405,12 +405,12 @@ t8_flow_around_joukowsky_airfoil (const double x[3], double t, double x_out[])
   /* Allocate some variables for the calculation of the velocity in the complex plane */
 
   /* The values for my depend on the airfoil generated via the joukowsky transform */
-  const double my_x = -0.08;
+  const double my_x = -0.12;
   const double my_y = 0.08;
   std::complex<double> my (my_x, my_y);
 
   double radius = sqrt (((1 - my_x) * (1 - my_x)) + (my_y * my_y));
-  const double velocity = 5;
+  const double velocity = 3;
   const double angle_of_attack = 0;
   const double circulation = 4 * M_PI * velocity * radius * sin (angle_of_attack + asin (my_y / radius));
 

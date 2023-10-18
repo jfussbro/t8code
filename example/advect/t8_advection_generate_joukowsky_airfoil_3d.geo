@@ -33,7 +33,7 @@
  /* Now, we can define the points of our airfoil. The coordinates
   * are calculated via the Joukowsky transform. */
  lc = 1;
- center_chi = -0.08;
+ center_chi = -0.12;
  center_eta = 0.08;
  radius = Sqrt(((1 - center_chi) * (1 - center_chi)) + (center_eta * center_eta));
  delta_angle = (2 * Pi) / 100;
@@ -58,9 +58,15 @@
    angle = angle + delta_angle;
  EndFor
  
+ Point(2000) = {2.25, 0, 0}; // trailing edge
+ 
  /* Build two spline fits for the points. One for the dorsal and one for the ventral side. */
- Spline(100) = {1000:1050};
- Spline(200) = {1050:1100};
+ Spline(100) = {2000, 1010:1035};
+ Spline(101) = {1035:1045};
+ Spline(102) = {1045:1051};
+ Spline(103) = {1051:1056};
+ Spline(104) = {1056:1066};
+ Spline(200) = {1066:1090, 2000};
  
  /* Definition of the corner points of the flow domain. */
  Point(2040) = {-4, -2, 0, 1.0};
@@ -69,14 +75,14 @@
  Point(2043) = {4, -2, 0, 1.0};
  
  /* Build lines through the points. */
- Line(101) = {2040, 2041};
- Line(102) = {2041, 2042};
- Line(103) = {2042, 2043};
- Line(104) = {2043, 2040};
+ Line(301) = {2040, 2041};
+ Line(302) = {2041, 2042};
+ Line(303) = {2042, 2043};
+ Line(304) = {2043, 2040};
  
  /* Close lines to loop */
- Curve Loop(1) = {101, 102, 103, 104};
- Curve Loop(2) = {100, 200};
+ Curve Loop(1) = {301, 302, 303, 304};
+ Curve Loop(2) = {100, 101, 102, 103, 104, 200};
  
  /* Make surface with profile cutout */
  Plane Surface(1) = {1, 2};
@@ -109,8 +115,7 @@
   * For other Gmsh versions check the Gmsh website: 
   * https://gmsh.info/doc/texinfo/gmsh.html#Mesh-options */
  /* Now we can create the three-dimensional mesh. */
- Mesh.MeshSizeMax = 1;
- Mesh.MeshSizeFromCurvature = 0;
+ Mesh.MeshSizeFromCurvature = 9;
  Mesh 3;
  Coherence Mesh;
  
